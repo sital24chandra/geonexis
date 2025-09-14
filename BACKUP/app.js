@@ -11,21 +11,26 @@ const io = socketio(server);
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 
-// Load geofences
+// Load geofence data
 const geofences = JSON.parse(fs.readFileSync("geofence.json", "utf8"));
 
-io.on("connection", socket => {
-    socket.on("send-location", data => {
-        io.emit("receive-location", { id: socket.id, ...data });
+io.on("connection", function (socket){
+    socket.on("send-location", function (data){
+        io.emit("receive-location", {id: socket.id, ...data});
+    });
+    
+    socket.on("disconnect", function(){
+        io.emit("user-disconnected", socket.id);
+        console.log("Disconnected");
     });
 
-    socket.on("disconnect", () => {
-        io.emit("user-disconnected", socket.id);
-    });
+    console.log("Connected");
 });
 
-app.get("/", (req, res) => {
+app.get("/", function (req, res) {
     res.render("index", { geofences });
 });
 
-server.listen(80, () => console.log("Server running on http://localhost"));
+server.listen(80, () => {
+    console.log("Server running on http://localhost");
+});
